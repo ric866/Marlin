@@ -96,7 +96,7 @@
 
 // Choose the name from boards.h that matches your setup
 #ifndef MOTHERBOARD
-  #define MOTHERBOARD BOARD_RAMPS_14_EFB
+  #define MOTHERBOARD BOARD_BTT_SKR_PRO_V1_2
 #endif
 
 /**
@@ -107,7 +107,7 @@
  *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-#define SERIAL_PORT 0
+#define SERIAL_PORT -1 //usb
 
 /**
  * Serial Port Baud Rate
@@ -120,7 +120,7 @@
  *
  * :[2400, 9600, 19200, 38400, 57600, 115200, 250000, 500000, 1000000]
  */
-#define BAUDRATE 250000
+#define BAUDRATE 115200
 //#define BAUD_RATE_GCODE     // Enable G-code M575 to set the baud rate
 
 /**
@@ -128,16 +128,16 @@
  * Currently Ethernet (-2) is only supported on Teensy 4.1 boards.
  * :[-2, -1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-//#define SERIAL_PORT_2 -1
-//#define BAUDRATE_2 250000   // Enable to override BAUDRATE
+#define SERIAL_PORT_2 1 //tft
+#define BAUDRATE_2 115200   // Enable to override BAUDRATE
 
 /**
  * Select a third serial port on the board to use for communication with the host.
  * Currently only supported for AVR, DUE, LPC1768/9 and STM32/STM32F1
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-//#define SERIAL_PORT_3 1
-//#define BAUDRATE_3 250000   // Enable to override BAUDRATE
+#define SERIAL_PORT_3 6 //wifi
+#define BAUDRATE_3 115200   // Enable to override BAUDRATE
 
 // Enable the Bluetooth serial interface on AT90USB devices
 //#define BLUETOOTH
@@ -633,7 +633,7 @@
  * heater. If your configuration is significantly different than this and you don't understand
  * the issues involved, don't use bed PID until someone else verifies that your hardware works.
  */
-//#define PIDTEMPBED
+#define PIDTEMPBED
 
 //#define BED_LIMIT_SWITCHING
 
@@ -727,7 +727,7 @@
  * Note: For Bowden Extruders make this large enough to allow load/unload.
  */
 #define PREVENT_LENGTHY_EXTRUDE
-#define EXTRUDE_MAXLENGTH 200
+#define EXTRUDE_MAXLENGTH 450 
 
 //===========================================================================
 //======================== Thermal Runaway Protection =======================
@@ -871,9 +871,9 @@
  *          TMC5130, TMC5130_STANDALONE, TMC5160, TMC5160_STANDALONE
  * :['A4988', 'A5984', 'DRV8825', 'LV8729', 'L6470', 'L6474', 'POWERSTEP01', 'TB6560', 'TB6600', 'TMC2100', 'TMC2130', 'TMC2130_STANDALONE', 'TMC2160', 'TMC2160_STANDALONE', 'TMC2208', 'TMC2208_STANDALONE', 'TMC2209', 'TMC2209_STANDALONE', 'TMC26X', 'TMC26X_STANDALONE', 'TMC2660', 'TMC2660_STANDALONE', 'TMC5130', 'TMC5130_STANDALONE', 'TMC5160', 'TMC5160_STANDALONE']
  */
-#define X_DRIVER_TYPE  A4988
-#define Y_DRIVER_TYPE  A4988
-#define Z_DRIVER_TYPE  A4988
+#define X_DRIVER_TYPE  TMC2209
+#define Y_DRIVER_TYPE  TMC2209
+#define Z_DRIVER_TYPE  TMC2209
 //#define X2_DRIVER_TYPE A4988
 //#define Y2_DRIVER_TYPE A4988
 //#define Z2_DRIVER_TYPE A4988
@@ -882,7 +882,7 @@
 //#define I_DRIVER_TYPE  A4988
 //#define J_DRIVER_TYPE  A4988
 //#define K_DRIVER_TYPE  A4988
-#define E0_DRIVER_TYPE A4988
+#define E0_DRIVER_TYPE TMC2209
 //#define E1_DRIVER_TYPE A4988
 //#define E2_DRIVER_TYPE A4988
 //#define E3_DRIVER_TYPE A4988
@@ -1040,10 +1040,11 @@
  * The probe replaces the Z-MIN endstop and is used for Z homing.
  * (Automatically enables USE_PROBE_FOR_Z_HOMING.)
  */
-#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
+//#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
 
 // Force the use of the probe for Z-axis homing
-//#define USE_PROBE_FOR_Z_HOMING
+#define Z_MIN_PROBE_PIN PA2
+#define USE_PROBE_FOR_Z_HOMING
 
 /**
  * Z_MIN_PROBE_PIN
@@ -1097,7 +1098,9 @@
 /**
  * The BLTouch probe uses a Hall effect sensor and emulates a servo.
  */
-//#define BLTOUCH
+#define BLTOUCH
+#define SERVO0_PIN   PA1
+#define Z_MIN_PROBE_PIN  PA2
 
 /**
  * MagLev V4 probe by MDD
@@ -1200,7 +1203,7 @@
  *     |    [-]    |
  *     O-- FRONT --+
  */
-#define NOZZLE_TO_PROBE_OFFSET { 10, 10, 0 }
+#define NOZZLE_TO_PROBE_OFFSET { 15, 80, 0 }
 
 // Most probes should stay away from the edges of the bed, but
 // with NOZZLE_AS_PROBE this can be negative for a wider probing area.
@@ -1260,7 +1263,7 @@
  * A total of 2 does fast/slow probes with a weighted average.
  * A total of 3 or more adds more slow probes, taking the average.
  */
-//#define MULTIPLE_PROBING 2
+#define MULTIPLE_PROBING 2
 //#define EXTRA_PROBING    1
 
 /**
@@ -1304,15 +1307,15 @@
  * These options are most useful for the BLTouch probe, but may also improve
  * readings with inductive probes and piezo sensors.
  */
-//#define PROBING_HEATERS_OFF       // Turn heaters off when probing
+#define PROBING_HEATERS_OFF       // Turn heaters off when probing
 #if ENABLED(PROBING_HEATERS_OFF)
-  //#define WAIT_FOR_BED_HEATER     // Wait for bed to heat back up between probes (to improve accuracy)
-  //#define WAIT_FOR_HOTEND         // Wait for hotend to heat back up between probes (to improve accuracy & prevent cold extrude)
+  #define WAIT_FOR_BED_HEATER     // Wait for bed to heat back up between probes (to improve accuracy)
+  #define WAIT_FOR_HOTEND         // Wait for hotend to heat back up between probes (to improve accuracy & prevent cold extrude)
 #endif
-//#define PROBING_FANS_OFF          // Turn fans off when probing
+#define PROBING_FANS_OFF          // Turn fans off when probing
 //#define PROBING_ESTEPPERS_OFF     // Turn all extruder steppers off when probing
-//#define PROBING_STEPPERS_OFF      // Turn all steppers off (unless needed to hold position) when probing (including extruders)
-//#define DELAY_BEFORE_PROBING 200  // (ms) To prevent vibrations from triggering piezo sensors
+#define PROBING_STEPPERS_OFF      // Turn all steppers off (unless needed to hold position) when probing (including extruders)
+#define DELAY_BEFORE_PROBING 200  // (ms) To prevent vibrations from triggering piezo sensors
 
 // Require minimum nozzle and/or bed temperature for probing
 //#define PREHEAT_BEFORE_PROBING
@@ -1361,7 +1364,7 @@
 // @section extruder
 
 // For direct drive extruder v9 set to true, for geared extruder set to false.
-#define INVERT_E0_DIR false
+#define INVERT_E0_DIR true
 #define INVERT_E1_DIR false
 #define INVERT_E2_DIR false
 #define INVERT_E3_DIR false
@@ -1464,7 +1467,8 @@
  * RAMPS-based boards use SERVO3_PIN for the first runout sensor.
  * For other boards you may need to define FIL_RUNOUT_PIN, FIL_RUNOUT2_PIN, etc.
  */
-//#define FILAMENT_RUNOUT_SENSOR
+#define FILAMENT_RUNOUT_SENSOR
+#define FIL_RUNOUT_PIN   PE15
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
   #define FIL_RUNOUT_ENABLED_DEFAULT true // Enable the sensor on startup. Override with M412 followed by M500.
   #define NUM_RUNOUT_SENSORS   1          // Number of sensors, up to one per extruder. Define a FIL_RUNOUT#_PIN for each.
@@ -1516,7 +1520,7 @@
   // After a runout is detected, continue printing this length of filament
   // before executing the runout script. Useful for a sensor at the end of
   // a feed tube. Requires 4 bytes SRAM per sensor, plus 4 bytes overhead.
-  //#define FILAMENT_RUNOUT_DISTANCE_MM 25
+  #define FILAMENT_RUNOUT_DISTANCE_MM 500
 
   #ifdef FILAMENT_RUNOUT_DISTANCE_MM
     // Enable this option to use an encoder disc that toggles the runout pin
@@ -1565,7 +1569,7 @@
  *   With an LCD controller the process is guided step-by-step.
  */
 //#define AUTO_BED_LEVELING_3POINT
-//#define AUTO_BED_LEVELING_LINEAR
+#define AUTO_BED_LEVELING_LINEAR
 //#define AUTO_BED_LEVELING_BILINEAR
 //#define AUTO_BED_LEVELING_UBL
 //#define MESH_BED_LEVELING
@@ -1767,7 +1771,7 @@
  * - Allows Z homing only when XY positions are known and trusted.
  * - If stepper drivers sleep, XY homing may be required again before Z homing.
  */
-//#define Z_SAFE_HOMING
+#define Z_SAFE_HOMING
 
 #if ENABLED(Z_SAFE_HOMING)
   #define Z_SAFE_HOMING_X_POINT X_CENTER  // X point for Z homing
@@ -1852,7 +1856,7 @@
  *   M501 - Read settings from EEPROM. (i.e., Throw away unsaved changes)
  *   M502 - Revert settings to "factory" defaults. (Follow with M500 to init the EEPROM.)
  */
-//#define EEPROM_SETTINGS     // Persistent storage with M500 and M501
+#define EEPROM_SETTINGS     // Persistent storage with M500 and M501
 //#define DISABLE_M503        // Saves ~2700 bytes of PROGMEM. Disable for release!
 #define EEPROM_CHITCHAT       // Give feedback on EEPROM commands. Disable to save PROGMEM.
 #define EEPROM_BOOT_SILENT    // Keep M503 quiet and only give errors during first load
@@ -1884,7 +1888,7 @@
 // @section temperature
 
 //
-// Preheat Constants - Up to 6 are supported without changes
+// Preheat Constants - Up to 5 are supported without changes
 //
 #define PREHEAT_1_LABEL       "PLA"
 #define PREHEAT_1_TEMP_HOTEND 180
@@ -1898,6 +1902,12 @@
 #define PREHEAT_2_TEMP_CHAMBER 35
 #define PREHEAT_2_FAN_SPEED     0 // Value from 0 to 255
 
+#define PREHEAT_3_LABEL       "PETG"
+#define PREHEAT_3_TEMP_HOTEND 230
+#define PREHEAT_3_TEMP_BED    85
+#define PREHEAT_3_TEMP_CHAMBER 35
+#define PREHEAT_3_FAN_SPEED     0 // Value from 0 to 255
+
 /**
  * Nozzle Park
  *
@@ -1909,7 +1919,7 @@
  *    P1  Raise the nozzle always to Z-park height.
  *    P2  Raise the nozzle by Z-park amount, limited to Z_MAX_POS.
  */
-//#define NOZZLE_PARK_FEATURE
+#define NOZZLE_PARK_FEATURE
 
 #if ENABLED(NOZZLE_PARK_FEATURE)
   // Specify a park position as { X, Y, Z_raise }
@@ -2125,14 +2135,14 @@
  * SD Card support is disabled by default. If your controller has an SD slot,
  * you must uncomment the following option or it won't work.
  */
-//#define SDSUPPORT
+#define SDSUPPORT
 
 /**
  * SD CARD: ENABLE CRC
  *
  * Use CRC checks and retries on the SD communication.
  */
-//#define SD_CHECK_AND_RETRY
+#define SD_CHECK_AND_RETRY
 
 /**
  * LCD Menu Items
@@ -2196,7 +2206,7 @@
 // Add individual axis homing items (Home X, Home Y, and Home Z) to the LCD menu.
 //
 //#define INDIVIDUAL_AXIS_HOMING_MENU
-//#define INDIVIDUAL_AXIS_HOMING_SUBMENU
+#define INDIVIDUAL_AXIS_HOMING_SUBMENU
 
 //
 // SPEAKER/BUZZER
@@ -2385,7 +2395,7 @@
 // RepRapDiscount FULL GRAPHIC Smart Controller
 // https://reprap.org/wiki/RepRapDiscount_Full_Graphic_Smart_Controller
 //
-//#define REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER
+#define REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER
 
 //
 // K.3D Full Graphic Smart Controller
@@ -2488,7 +2498,7 @@
 //
 // Factory display for Creality CR-10
 // https://www.aliexpress.com/item/32833148327.html
-//
+// 
 // This is RAMPS-compatible using a single 10-pin connector.
 // (For CR-10 owners who want to replace the Melzi Creality board but retain the display)
 //
@@ -2584,38 +2594,38 @@
 //========================== Extensible UI Displays ===========================
 //=============================================================================
 
-/**
- * DGUS Touch Display with DWIN OS. (Choose one.)
- * ORIGIN : https://www.aliexpress.com/item/32993409517.html
- * FYSETC : https://www.aliexpress.com/item/32961471929.html
- * MKS    : https://www.aliexpress.com/item/1005002008179262.html
- *
- * Flash display with DGUS Displays for Marlin:
- *  - Format the SD card to FAT32 with an allocation size of 4kb.
- *  - Download files as specified for your type of display.
- *  - Plug the microSD card into the back of the display.
- *  - Boot the display and wait for the update to complete.
- *
- * ORIGIN (Marlin DWIN_SET)
- *  - Download https://github.com/coldtobi/Marlin_DGUS_Resources
- *  - Copy the downloaded DWIN_SET folder to the SD card.
- *
- * FYSETC (Supplier default)
- *  - Download https://github.com/FYSETC/FYSTLCD-2.0
- *  - Copy the downloaded SCREEN folder to the SD card.
- *
- * HIPRECY (Supplier default)
- *  - Download https://github.com/HiPrecy/Touch-Lcd-LEO
- *  - Copy the downloaded DWIN_SET folder to the SD card.
- *
- * MKS (MKS-H43) (Supplier default)
- *  - Download https://github.com/makerbase-mks/MKS-H43
- *  - Copy the downloaded DWIN_SET folder to the SD card.
- *
- * RELOADED (T5UID1)
- *  - Download https://github.com/Desuuuu/DGUS-reloaded/releases
- *  - Copy the downloaded DWIN_SET folder to the SD card.
- */
+//
+// DGUS Touch Display with DWIN OS. (Choose one.)
+// ORIGIN : https://www.aliexpress.com/item/32993409517.html
+// FYSETC : https://www.aliexpress.com/item/32961471929.html
+// MKS    : https://www.aliexpress.com/item/1005002008179262.html
+//
+// Flash display with DGUS Displays for Marlin:
+//  - Format the SD card to FAT32 with an allocation size of 4kb.
+//  - Download files as specified for your type of display.
+//  - Plug the microSD card into the back of the display.
+//  - Boot the display and wait for the update to complete.
+//
+// ORIGIN (Marlin DWIN_SET)
+//  - Download https://github.com/coldtobi/Marlin_DGUS_Resources
+//  - Copy the downloaded DWIN_SET folder to the SD card.
+//
+// FYSETC (Supplier default)
+//  - Download https://github.com/FYSETC/FYSTLCD-2.0
+//  - Copy the downloaded SCREEN folder to the SD card.
+//
+// HIPRECY (Supplier default)
+//  - Download https://github.com/HiPrecy/Touch-Lcd-LEO
+//  - Copy the downloaded DWIN_SET folder to the SD card.
+//
+// MKS (MKS-H43) (Supplier default)
+//  - Download https://github.com/makerbase-mks/MKS-H43
+//  - Copy the downloaded DWIN_SET folder to the SD card.
+//
+// RELOADED (T5UID1)
+//  - Download https://github.com/Desuuuu/DGUS-reloaded/releases
+//  - Copy the downloaded DWIN_SET folder to the SD card.
+//
 //#define DGUS_LCD_UI_ORIGIN
 //#define DGUS_LCD_UI_FYSETC
 //#define DGUS_LCD_UI_HIPRECY
@@ -2807,7 +2817,7 @@
 // Ender-3 v2 OEM display. A DWIN display with Rotary Encoder.
 //
 //#define DWIN_CREALITY_LCD           // Creality UI
-//#define DWIN_LCD_PROUI              // Pro UI by MRiscoC
+//#define DWIN_CREALITY_LCD_ENHANCED  // Enhanced UI
 //#define DWIN_CREALITY_LCD_JYERSUI   // Jyers UI by Jacob Myers
 //#define DWIN_MARLINUI_PORTRAIT      // MarlinUI (portrait orientation)
 //#define DWIN_MARLINUI_LANDSCAPE     // MarlinUI (landscape orientation)
@@ -2820,7 +2830,7 @@
   #define BUTTON_DELAY_EDIT  50 // (ms) Button repeat delay for edit screens
   #define BUTTON_DELAY_MENU 250 // (ms) Button repeat delay for menus
 
-  //#define TOUCH_IDLE_SLEEP 300 // (s) Turn off the TFT backlight if set (5mn)
+  //#define TOUCH_IDLE_SLEEP 300 // (secs) Turn off the TFT backlight if set (5mn)
 
   #define TOUCH_SCREEN_CALIBRATION
 
@@ -2930,31 +2940,30 @@
 // Support for Adafruit NeoPixel LED driver
 //#define NEOPIXEL_LED
 #if ENABLED(NEOPIXEL_LED)
-  #define NEOPIXEL_TYPE          NEO_GRBW // NEO_GRBW, NEO_RGBW, NEO_GRB, NEO_RBG, etc.
-                                          // See https://github.com/adafruit/Adafruit_NeoPixel/blob/master/Adafruit_NeoPixel.h
-  //#define NEOPIXEL_PIN                4 // LED driving pin
-  //#define NEOPIXEL2_TYPE  NEOPIXEL_TYPE
-  //#define NEOPIXEL2_PIN               5
-  #define NEOPIXEL_PIXELS              30 // Number of LEDs in the strip. (Longest strip when NEOPIXEL2_SEPARATE is disabled.)
-  #define NEOPIXEL_IS_SEQUENTIAL          // Sequential display for temperature change - LED by LED. Disable to change all LEDs at once.
-  #define NEOPIXEL_BRIGHTNESS         127 // Initial brightness (0-255)
-  //#define NEOPIXEL_STARTUP_TEST         // Cycle through colors at startup
+  #define NEOPIXEL_TYPE   NEO_GRBW // NEO_GRBW / NEO_GRB - four/three channel driver type (defined in Adafruit_NeoPixel.h)
+  //#define NEOPIXEL_PIN     4     // LED driving pin
+  //#define NEOPIXEL2_TYPE NEOPIXEL_TYPE
+  //#define NEOPIXEL2_PIN    5
+  #define NEOPIXEL_PIXELS 30       // Number of LEDs in the strip. (Longest strip when NEOPIXEL2_SEPARATE is disabled.)
+  #define NEOPIXEL_IS_SEQUENTIAL   // Sequential display for temperature change - LED by LED. Disable to change all LEDs at once.
+  #define NEOPIXEL_BRIGHTNESS 127  // Initial brightness (0-255)
+  //#define NEOPIXEL_STARTUP_TEST  // Cycle through colors at startup
 
   // Support for second Adafruit NeoPixel LED driver controlled with M150 S1 ...
   //#define NEOPIXEL2_SEPARATE
   #if ENABLED(NEOPIXEL2_SEPARATE)
-    #define NEOPIXEL2_PIXELS           15 // Number of LEDs in the second strip
-    #define NEOPIXEL2_BRIGHTNESS      127 // Initial brightness (0-255)
-    #define NEOPIXEL2_STARTUP_TEST        // Cycle through colors at startup
+    #define NEOPIXEL2_PIXELS      15  // Number of LEDs in the second strip
+    #define NEOPIXEL2_BRIGHTNESS 127  // Initial brightness (0-255)
+    #define NEOPIXEL2_STARTUP_TEST    // Cycle through colors at startup
   #else
-    //#define NEOPIXEL2_INSERIES          // Default behavior is NeoPixel 2 in parallel
+    //#define NEOPIXEL2_INSERIES      // Default behavior is NeoPixel 2 in parallel
   #endif
 
   // Use some of the NeoPixel LEDs for static (background) lighting
-  //#define NEOPIXEL_BKGD_INDEX_FIRST   0 // Index of the first background LED
-  //#define NEOPIXEL_BKGD_INDEX_LAST    5 // Index of the last background LED
+  //#define NEOPIXEL_BKGD_INDEX_FIRST  0              // Index of the first background LED
+  //#define NEOPIXEL_BKGD_INDEX_LAST   5              // Index of the last background LED
   //#define NEOPIXEL_BKGD_COLOR { 255, 255, 255, 0 }  // R, G, B, W
-  //#define NEOPIXEL_BKGD_ALWAYS_ON       // Keep the backlight on when other NeoPixels are off
+  //#define NEOPIXEL_BKGD_ALWAYS_ON                   // Keep the backlight on when other NeoPixels are off
 #endif
 
 /**

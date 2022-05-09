@@ -249,6 +249,20 @@
   #endif
 #endif
 
+//
+// Laser Coolant Flow Meter
+//
+//#define LASER_COOLANT_FLOW_METER
+#if ENABLED(LASER_COOLANT_FLOW_METER)
+  #define FLOWMETER_PIN         20  // Requires an external interrupt-enabled pin (e.g., RAMPS 2,3,18,19,20,21)
+  #define FLOWMETER_PPL       5880  // (pulses/liter) Flow meter pulses-per-liter on the input pin
+  #define FLOWMETER_INTERVAL  1000  // (ms) Flow rate calculation interval in milliseconds
+  #define FLOWMETER_SAFETY          // Prevent running the laser without the minimum flow rate set below
+  #if ENABLED(FLOWMETER_SAFETY)
+    #define FLOWMETER_MIN_LITERS_PER_MINUTE 1.5 // (liters/min) Minimum flow required when enabled
+  #endif
+#endif
+
 /**
  * Thermal Protection provides additional protection to your printer from damage
  * and fire. Marlin always includes safe min and max temperature ranges which
@@ -333,11 +347,7 @@
 #endif
 
 #if ANY(THERMAL_PROTECTION_HOTENDS, THERMAL_PROTECTION_BED, THERMAL_PROTECTION_CHAMBER, THERMAL_PROTECTION_COOLER)
-  /**
-   * Thermal Protection Variance Monitor - EXPERIMENTAL.
-   * Kill the machine on a stuck temperature sensor. Disable if you get false positives.
-   */
-  //#define THERMAL_PROTECTION_VARIANCE_MONITOR   // Detect a sensor malfunction preventing temperature updates
+  #define THERMAL_PROTECTION_VARIANCE_MONITOR     // Detect a sensor malfunction preventing temperature updates
 #endif
 
 #if ENABLED(PIDTEMP)
@@ -606,6 +616,7 @@
 #define E7_AUTO_FAN_PIN -1
 #define CHAMBER_AUTO_FAN_PIN -1
 #define COOLER_AUTO_FAN_PIN -1
+#define COOLER_FAN_PIN -1
 
 #define EXTRUDER_AUTO_FAN_TEMPERATURE 50
 #define EXTRUDER_AUTO_FAN_SPEED 255   // 255 == full speed
@@ -796,17 +807,18 @@
  */
 //#define DUAL_X_CARRIAGE
 #if ENABLED(DUAL_X_CARRIAGE)
-  #define X1_MIN_POS X_MIN_POS    // Set to X_MIN_POS
-  #define X1_MAX_POS X_BED_SIZE   // A max coordinate so the X1 carriage can't hit the parked X2 carriage
-  #define X2_MIN_POS    80        // A min coordinate so the X2 carriage can't hit the parked X1 carriage
-  #define X2_MAX_POS   353        // The max position of the X2 carriage, typically also the home position
-  #define X2_HOME_DIR    1        // Set to 1. The X2 carriage always homes to the max endstop position
-  #define X2_HOME_POS X2_MAX_POS  // Default X2 home position. Set to X2_MAX_POS.
-                                  // NOTE: For Dual X Carriage use M218 T1 Xn to override the X2_HOME_POS.
-                                  // This allows recalibration of endstops distance without a rebuild.
-                                  // Remember to set the second extruder's X-offset to 0 in your slicer.
+  #define X1_MIN_POS X_MIN_POS   // Set to X_MIN_POS
+  #define X1_MAX_POS X_BED_SIZE  // Set a maximum so the first X-carriage can't hit the parked second X-carriage
+  #define X2_MIN_POS    80       // Set a minimum to ensure the  second X-carriage can't hit the parked first X-carriage
+  #define X2_MAX_POS   353       // Set this to the distance between toolheads when both heads are homed
+  #define X2_HOME_DIR    1       // Set to 1. The second X-carriage always homes to the maximum endstop position
+  #define X2_HOME_POS X2_MAX_POS // Default X2 home position. Set to X2_MAX_POS.
+                      // However: In this mode the HOTEND_OFFSET_X value for the second extruder provides a software
+                      // override for X2_HOME_POS. This also allow recalibration of the distance between the two endstops
+                      // without modifying the firmware (through the "M218 T1 X???" command).
+                      // Remember: you should set the second extruder x-offset to 0 in your slicer.
 
-  // This is the default power-up mode which can be changed later using M605 S<mode>.
+  // This is the default power-up mode which can be later using M605.
   #define DEFAULT_DUAL_X_CARRIAGE_MODE DXC_AUTO_PARK_MODE
 
   // Default x offset in duplication mode (typically set to half print bed width)
@@ -828,7 +840,7 @@
  * the position of the toolhead relative to the workspace.
  */
 
-//#define SENSORLESS_BACKOFF_MM  { 2, 2, 0 }  // (mm) Backoff from endstops before sensorless homing
+#define SENSORLESS_BACKOFF_MM  { 2, 2, 0 }  // (mm) Backoff from endstops before sensorless homing
 
 #define HOMING_BUMP_MM      { 5, 5, 2 }       // (mm) Backoff from endstops after first bump
 #define HOMING_BUMP_DIVISOR { 2, 2, 4 }       // Re-Bump Speed Divisor (Divides the Homing Feedrate)
@@ -860,7 +872,7 @@
 
   // Safety: The probe needs time to recognize the command.
   //         Minimum command delay (ms). Enable and increase if needed.
-  //#define BLTOUCH_DELAY 500
+  #define BLTOUCH_DELAY 500
 
   /**
    * Settings for BLTOUCH Classic 1.2, 1.3 or BLTouch Smart 1.0, 2.0, 2.2, 3.0, 3.1, and most clones:
@@ -904,7 +916,7 @@
    *
    * Set the default state here, change with 'M401 S' or UI, use M500 to save, M502 to reset.
    */
-  //#define BLTOUCH_HS_MODE true
+  #define BLTOUCH_HS_MODE true
 
   // Safety: Enable voltage mode settings in the LCD menu.
   //#define BLTOUCH_LCD_VOLTAGE_MENU
@@ -947,17 +959,15 @@
     //#define Z_STEPPERS_ORIENTATION 0
   #endif
 
-  /**
-   * Z Stepper positions for more rapid convergence in bed alignment.
-   * Requires NUM_Z_STEPPER_DRIVERS to be 3 or 4.
-   *
-   * Define Stepper XY positions for Z1, Z2, Z3... corresponding to the screw
-   * positions in the bed carriage, with one position per Z stepper in stepper
-   * driver order.
-   */
-  //#define Z_STEPPER_ALIGN_STEPPER_XY { { 210.7, 102.5 }, { 152.6, 220.0 }, { 94.5, 102.5 } }
-
-  #ifndef Z_STEPPER_ALIGN_STEPPER_XY
+  // Provide Z stepper positions for more rapid convergence in bed alignment.
+  // Requires triple stepper drivers (i.e., set NUM_Z_STEPPER_DRIVERS to 3)
+  //#define Z_STEPPER_ALIGN_KNOWN_STEPPER_POSITIONS
+  #if ENABLED(Z_STEPPER_ALIGN_KNOWN_STEPPER_POSITIONS)
+    // Define Stepper XY positions for Z1, Z2, Z3 corresponding to
+    // the Z screw positions in the bed carriage.
+    // Define one position per Z stepper in stepper driver order.
+    #define Z_STEPPER_ALIGN_STEPPER_XY { { 210.7, 102.5 }, { 152.6, 220.0 }, { 94.5, 102.5 } }
+  #else
     // Amplification factor. Used to scale the correction step up or down in case
     // the stepper (spindle) position is farther out than the test point.
     #define Z_STEPPER_ALIGN_AMP 1.0       // Use a value > 1.0 NOTE: This may cause instability!
@@ -1267,11 +1277,6 @@
   #define FEEDRATE_CHANGE_BEEP_FREQUENCY 440
 #endif
 
-//
-// LCD Backlight Timeout
-//
-//#define LCD_BACKLIGHT_TIMEOUT 30 // (s) Timeout before turning off the backlight
-
 #if HAS_BED_PROBE && EITHER(HAS_MARLINUI_MENU, HAS_TFT_LVGL_UI)
   //#define PROBE_OFFSET_WIZARD       // Add a Probe Z Offset calibration option to the LCD menu
   #if ENABLED(PROBE_OFFSET_WIZARD)
@@ -1289,7 +1294,7 @@
 
 #if HAS_MARLINUI_MENU
 
-  #if HAS_BED_PROBE
+  #if BOTH(HAS_BED_PROBE, AUTO_BED_LEVELING_BILINEAR)
     // Add calibration in the Probe Offsets menu to compensate for X-axis twist.
     //#define X_AXIS_TWIST_COMPENSATION
     #if ENABLED(X_AXIS_TWIST_COMPENSATION)
@@ -1301,7 +1306,6 @@
       #define XATC_START_Z 0.0
       #define XATC_MAX_POINTS 3             // Number of points to probe in the wizard
       #define XATC_Y_POSITION Y_CENTER      // (mm) Y position to probe
-      #define XATC_Z_OFFSETS { 0, 0, 0 }    // Z offsets for X axis sample points
     #endif
   #endif
 
@@ -1319,26 +1323,23 @@
 
 #endif // HAS_MARLINUI_MENU
 
-#if ANY(HAS_DISPLAY, DWIN_LCD_PROUI, DWIN_CREALITY_LCD_JYERSUI)
+#if ANY(HAS_DISPLAY, DWIN_CREALITY_LCD_ENHANCED, DWIN_CREALITY_LCD_JYERSUI)
   //#define SOUND_MENU_ITEM   // Add a mute option to the LCD menu
 #endif
 
-#if EITHER(HAS_DISPLAY, DWIN_LCD_PROUI)
-  // The timeout to return to the status screen from sub-menus
-  //#define LCD_TIMEOUT_TO_STATUS 15000   // (ms)
+#if EITHER(HAS_DISPLAY, DWIN_CREALITY_LCD_ENHANCED)
+  // The timeout (in ms) to return to the status screen from sub-menus
+  //#define LCD_TIMEOUT_TO_STATUS 15000
 
   #if ENABLED(SHOW_BOOTSCREEN)
-    #define BOOTSCREEN_TIMEOUT 4000       // (ms) Total Duration to display the boot screen(s)
+    #define BOOTSCREEN_TIMEOUT 4000      // (ms) Total Duration to display the boot screen(s)
     #if EITHER(HAS_MARLINUI_U8GLIB, TFT_COLOR_UI)
-      #define BOOT_MARLIN_LOGO_SMALL      // Show a smaller Marlin logo on the Boot Screen (saving lots of flash)
+      #define BOOT_MARLIN_LOGO_SMALL     // Show a smaller Marlin logo on the Boot Screen (saving lots of flash)
     #endif
   #endif
 
   // Scroll a longer status message into view
   //#define STATUS_MESSAGE_SCROLLING
-
-  // Apply a timeout to low-priority status messages
-  //#define STATUS_MESSAGE_TIMEOUT_SEC 30 // (seconds)
 
   // On the Info Screen, display XY with one decimal place when possible
   //#define LCD_DECIMAL_SMALL_XY
@@ -1456,7 +1457,7 @@
    * an option on the LCD screen to continue the print from the last-known
    * point in the file.
    */
-  //#define POWER_LOSS_RECOVERY
+  #define POWER_LOSS_RECOVERY
   #if ENABLED(POWER_LOSS_RECOVERY)
     #define PLR_ENABLED_DEFAULT   false // Power Loss Recovery enabled by default. (Set with 'M413 Sn' & M500)
     //#define BACKUP_POWER_SUPPLY       // Backup power / UPS to move the steppers on power loss
@@ -1521,10 +1522,10 @@
   // LCD's font must contain the characters. Check your selected LCD language.
   //#define UTF_FILENAME_SUPPORT
 
-  //#define LONG_FILENAME_HOST_SUPPORT    // Get the long filename of a file/folder with 'M33 <dosname>' and list long filenames with 'M20 L'
+  #define LONG_FILENAME_HOST_SUPPORT    // Get the long filename of a file/folder with 'M33 <dosname>' and list long filenames with 'M20 L'
   //#define LONG_FILENAME_WRITE_SUPPORT   // Create / delete files with long filenames via M28, M30, and Binary Transfer Protocol
 
-  //#define SCROLL_LONG_FILENAMES         // Scroll long filenames in the SD card menu
+  #define SCROLL_LONG_FILENAMES         // Scroll long filenames in the SD card menu
 
   //#define SD_ABORT_NO_COOLDOWN          // Leave the heaters on after Stop Print (not recommended!)
 
@@ -1620,15 +1621,12 @@
    *
    * :[ 'LCD', 'ONBOARD', 'CUSTOM_CABLE' ]
    */
-  //#define SDCARD_CONNECTION LCD
+  #define SDCARD_CONNECTION ONBOARD
 
   // Enable if SD detect is rendered useless (e.g., by using an SD extender)
   //#define NO_SD_DETECT
 
-  /**
-   * Multiple volume support - EXPERIMENTAL.
-   * Adds 'M21 Pm' / 'M21 S' / 'M21 U' to mount SD Card / USB Drive.
-   */
+  // Multiple volume support - EXPERIMENTAL.
   //#define MULTI_VOLUME
   #if ENABLED(MULTI_VOLUME)
     #define VOLUME_SD_ONBOARD
@@ -1939,18 +1937,18 @@
  *
  * Warning: Does not respect endstops!
  */
-//#define BABYSTEPPING
+#define BABYSTEPPING
 #if ENABLED(BABYSTEPPING)
   //#define INTEGRATED_BABYSTEPPING         // EXPERIMENTAL integration of babystepping into the Stepper ISR
-  //#define BABYSTEP_WITHOUT_HOMING
-  //#define BABYSTEP_ALWAYS_AVAILABLE       // Allow babystepping at all times (not just during movement).
+  #define BABYSTEP_WITHOUT_HOMING
+  #define BABYSTEP_ALWAYS_AVAILABLE       // Allow babystepping at all times (not just during movement).
   //#define BABYSTEP_XY                     // Also enable X/Y Babystepping. Not supported on DELTA!
   #define BABYSTEP_INVERT_Z false           // Change if Z babysteps should go the other way
-  //#define BABYSTEP_MILLIMETER_UNITS       // Specify BABYSTEP_MULTIPLICATOR_(XY|Z) in mm instead of micro-steps
-  #define BABYSTEP_MULTIPLICATOR_Z  1       // (steps or mm) Steps or millimeter distance for each Z babystep
+  #define BABYSTEP_MILLIMETER_UNITS       // Specify BABYSTEP_MULTIPLICATOR_(XY|Z) in mm instead of micro-steps
+  #define BABYSTEP_MULTIPLICATOR_Z  0.01       // (steps or mm) Steps or millimeter distance for each Z babystep
   #define BABYSTEP_MULTIPLICATOR_XY 1       // (steps or mm) Steps or millimeter distance for each XY babystep
 
-  //#define DOUBLECLICK_FOR_Z_BABYSTEPPING  // Double-click on the Status Screen for Z Babystepping.
+  #define DOUBLECLICK_FOR_Z_BABYSTEPPING  // Double-click on the Status Screen for Z Babystepping.
   #if ENABLED(DOUBLECLICK_FOR_Z_BABYSTEPPING)
     #define DOUBLECLICK_MAX_INTERVAL 1250   // Maximum interval between clicks, in milliseconds.
                                             // Note: Extra time may be added to mitigate controller latency.
@@ -1962,10 +1960,10 @@
 
   //#define BABYSTEP_DISPLAY_TOTAL          // Display total babysteps since last G28
 
-  //#define BABYSTEP_ZPROBE_OFFSET          // Combine M851 Z and Babystepping
+  #define BABYSTEP_ZPROBE_OFFSET          // Combine M851 Z and Babystepping
   #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
     //#define BABYSTEP_HOTEND_Z_OFFSET      // For multiple hotends, babystep relative Z offsets
-    //#define BABYSTEP_ZPROBE_GFX_OVERLAY   // Enable graphical overlay on Z-offset editor
+    #define BABYSTEP_ZPROBE_GFX_OVERLAY   // Enable graphical overlay on Z-offset editor
   #endif
 #endif
 
@@ -2052,7 +2050,7 @@
  * Repeatedly attempt G29 leveling until it succeeds.
  * Stop after G29_MAX_RETRIES attempts.
  */
-//#define G29_RETRY_AND_RECOVER
+#define G29_RETRY_AND_RECOVER
 #if ENABLED(G29_RETRY_AND_RECOVER)
   #define G29_MAX_RETRIES 3
   #define G29_HALT_ON_FAILURE
@@ -2142,7 +2140,7 @@
 //
 // G2/G3 Arc Support
 //
-#define ARC_SUPPORT                   // Requires ~3226 bytes
+//#define ARC_SUPPORT                   // Requires ~3226 bytes
 #if ENABLED(ARC_SUPPORT)
   #define MIN_ARC_SEGMENT_MM      0.1 // (mm) Minimum length of each arc segment
   #define MAX_ARC_SEGMENT_MM      1.0 // (mm) Maximum length of each arc segment
@@ -2243,11 +2241,11 @@
 // The number of linear moves that can be in the planner at once.
 // The value of BLOCK_BUFFER_SIZE must be a power of 2 (e.g., 8, 16, 32)
 #if BOTH(SDSUPPORT, DIRECT_STEPPING)
-  #define BLOCK_BUFFER_SIZE  8
+  #define BLOCK_BUFFER_SIZE  32
 #elif ENABLED(SDSUPPORT)
-  #define BLOCK_BUFFER_SIZE 16
+  #define BLOCK_BUFFER_SIZE 64
 #else
-  #define BLOCK_BUFFER_SIZE 16
+  #define BLOCK_BUFFER_SIZE 64
 #endif
 
 // @section serial
@@ -2263,7 +2261,7 @@
 // For debug-echo: 128 bytes for the optimal speed.
 // Other output doesn't need to be that speedy.
 // :[0, 2, 4, 8, 16, 32, 64, 128, 256]
-#define TX_BUFFER_SIZE 0
+#define TX_BUFFER_SIZE 128
 
 // Host Receive Buffer Size
 // Without XON/XOFF flow control (see SERIAL_XON_XOFF below) 32 bytes should be enough.
@@ -2338,15 +2336,6 @@
 
 // For serial echo, the number of digits after the decimal point
 //#define SERIAL_FLOAT_PRECISION 4
-
-/**
- * Set the number of proportional font spaces required to fill up a typical character space.
- * This can help to better align the output of commands like `G29 O` Mesh Output.
- *
- * For clients that use a fixed-width font (like OctoPrint), leave this set to 1.0.
- * Otherwise, adjust according to your client and font.
- */
-#define PROPORTIONAL_FONT_RATIO 1.0
 
 // @section extras
 
@@ -2488,7 +2477,7 @@
  *
  * Enable PARK_HEAD_ON_PAUSE to add the G-code M125 Pause and Park.
  */
-//#define ADVANCED_PAUSE_FEATURE
+#define ADVANCED_PAUSE_FEATURE
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   #define PAUSE_PARK_RETRACT_FEEDRATE         60  // (mm/s) Initial retract feedrate.
   #define PAUSE_PARK_RETRACT_LENGTH            2  // (mm) Initial retract.
@@ -2690,7 +2679,7 @@
   #define INTERPOLATE      true
 
   #if AXIS_IS_TMC(X)
-    #define X_CURRENT       800        // (mA) RMS current. Multiply by 1.414 for peak current.
+    #define X_CURRENT       650        // (mA) RMS current. Multiply by 1.414 for peak current.
     #define X_CURRENT_HOME  X_CURRENT  // (mA) RMS current for sensorless homing
     #define X_MICROSTEPS     16        // 0..256
     #define X_RSENSE          0.11
@@ -2710,7 +2699,7 @@
   #endif
 
   #if AXIS_IS_TMC(Y)
-    #define Y_CURRENT       800
+    #define Y_CURRENT       650
     #define Y_CURRENT_HOME  Y_CURRENT
     #define Y_MICROSTEPS     16
     #define Y_RSENSE          0.11
@@ -2730,7 +2719,7 @@
   #endif
 
   #if AXIS_IS_TMC(Z)
-    #define Z_CURRENT       800
+    #define Z_CURRENT       650
     #define Z_CURRENT_HOME  Z_CURRENT
     #define Z_MICROSTEPS     16
     #define Z_RSENSE          0.11
@@ -2800,7 +2789,7 @@
   #endif
 
   #if AXIS_IS_TMC(E0)
-    #define E0_CURRENT      800
+    #define E0_CURRENT      650
     #define E0_MICROSTEPS    16
     #define E0_RSENSE         0.11
     #define E0_CHAIN_POS     -1
@@ -2955,7 +2944,7 @@
   #define STEALTHCHOP_I
   #define STEALTHCHOP_J
   #define STEALTHCHOP_K
-  #define STEALTHCHOP_E
+  //#define STEALTHCHOP_E
 
   /**
    * Optimize spreadCycle chopper parameters by using predefined parameter sets
@@ -3004,7 +2993,7 @@
    * M912 - Clear stepper driver overtemperature pre-warn condition flag.
    * M122 - Report driver parameters (Requires TMC_DEBUG)
    */
-  //#define MONITOR_DRIVER_STATUS
+  #define MONITOR_DRIVER_STATUS
 
   #if ENABLED(MONITOR_DRIVER_STATUS)
     #define CURRENT_STEP_DOWN     50  // [mA]
@@ -3025,7 +3014,7 @@
   #define X2_HYBRID_THRESHOLD    100
   #define Y_HYBRID_THRESHOLD     100
   #define Y2_HYBRID_THRESHOLD    100
-  #define Z_HYBRID_THRESHOLD       3
+  #define Z_HYBRID_THRESHOLD      15
   #define Z2_HYBRID_THRESHOLD      3
   #define Z3_HYBRID_THRESHOLD      3
   #define Z4_HYBRID_THRESHOLD      3
@@ -3107,7 +3096,7 @@
    * Enable M122 debugging command for TMC stepper drivers.
    * M122 S0/1 will enable continuous reporting.
    */
-  //#define TMC_DEBUG
+  #define TMC_DEBUG
 
   /**
    * You can set your own advanced settings by filling in predefined functions.
@@ -3442,17 +3431,24 @@
  * You'll need to select a pin for the ON/OFF function and optionally choose a 0-5V
  * hardware PWM pin for the speed control and a pin for the rotation direction.
  *
- * See https://marlinfw.org/docs/configuration/2.0.9/laser_spindle.html for more config details.
+ * See https://marlinfw.org/docs/configuration/laser_spindle.html for more config details.
  */
 //#define SPINDLE_FEATURE
-//#define LASER_FEATURE
+#define LASER_FEATURE
+
+// Re-map Pins to make sure we know what is what
+#define FAN2_PIN              -1  // Unmap fan 2 from PE6
+#define SPINDLE_LASER_PWM_PIN PC9 // Hardware PWM laser TTL input
+#define SPINDLE_LASER_ENA_PIN PE6 // CO2 PSU enable input
+
+
 #if EITHER(SPINDLE_FEATURE, LASER_FEATURE)
-  #define SPINDLE_LASER_ACTIVE_STATE    LOW    // Set to "HIGH" if SPINDLE_LASER_ENA_PIN is active HIGH
+  #define SPINDLE_LASER_ACTIVE_STATE    HIGH    // Set to "HIGH" if SPINDLE_LASER_ENA_PIN is active HIGH
 
   #define SPINDLE_LASER_USE_PWM                // Enable if your controller supports setting the speed/power
   #if ENABLED(SPINDLE_LASER_USE_PWM)
     #define SPINDLE_LASER_PWM_INVERT    false  // Set to "true" if the speed/power goes up when you want it to go slower
-    #define SPINDLE_LASER_FREQUENCY     2500   // (Hz) Spindle/laser frequency (only on supported HALs: AVR, ESP32, and LPC)
+    #define SPINDLE_LASER_FREQUENCY     2500   // (Hz) Spindle/laser frequency (only on supported HALs: AVR and LPC)
   #endif
 
   //#define AIR_EVACUATION                     // Cutter Vacuum / Laser Blower motor control with G-codes M10-M11
@@ -3611,20 +3607,6 @@
     #if ENABLED(I2C_AMMETER)
       #define I2C_AMMETER_IMAX            0.1    // (Amps) Calibration value for the expected current range
       #define I2C_AMMETER_SHUNT_RESISTOR  0.1    // (Ohms) Calibration shunt resistor value
-    #endif
-
-    //
-    // Laser Coolant Flow Meter
-    //
-    //#define LASER_COOLANT_FLOW_METER
-    #if ENABLED(LASER_COOLANT_FLOW_METER)
-      #define FLOWMETER_PIN         20  // Requires an external interrupt-enabled pin (e.g., RAMPS 2,3,18,19,20,21)
-      #define FLOWMETER_PPL       5880  // (pulses/liter) Flow meter pulses-per-liter on the input pin
-      #define FLOWMETER_INTERVAL  1000  // (ms) Flow rate calculation interval in milliseconds
-      #define FLOWMETER_SAFETY          // Prevent running the laser without the minimum flow rate set below
-      #if ENABLED(FLOWMETER_SAFETY)
-        #define FLOWMETER_MIN_LITERS_PER_MINUTE 1.5 // (liters/min) Minimum flow required when enabled
-      #endif
     #endif
 
   #endif
@@ -3804,6 +3786,15 @@
 //#define M114_LEGACY         // M114 used to synchronize on every call. Enable if needed.
 
 //#define REPORT_FAN_CHANGE   // Report the new fan speed when changed by M106 (and others)
+
+/**
+ * Set the number of proportional font spaces required to fill up a typical character space.
+ * This can help to better align the output of commands like `G29 O` Mesh Output.
+ *
+ * For clients that use a fixed-width font (like OctoPrint), leave this set to 1.0.
+ * Otherwise, adjust according to your client and font.
+ */
+#define PROPORTIONAL_FONT_RATIO 1.0
 
 /**
  * Spend 28 bytes of SRAM to optimize the G-code parser
@@ -4109,12 +4100,12 @@
 
 /**
  * Instant freeze / unfreeze functionality
+ * Specified pin has pullup and connecting to ground will instantly pause motion.
  * Potentially useful for emergency stop that allows being resumed.
  */
 //#define FREEZE_FEATURE
 #if ENABLED(FREEZE_FEATURE)
   //#define FREEZE_PIN 41   // Override the default (KILL) pin here
-  #define FREEZE_STATE LOW  // State of pin indicating freeze
 #endif
 
 /**
@@ -4323,7 +4314,7 @@
 //
 // M43 - display pin status, toggle pins, watch pins, watch endstops & toggle LED, test servo probe
 //
-//#define PINS_DEBUGGING
+#define PINS_DEBUGGING
 
 // Enable Marlin dev mode which adds some special commands
 //#define MARLIN_DEV_MODE
